@@ -44,11 +44,16 @@ export function ConnectionStatus({ connectionInfo, onRetry }: ConnectionStatusPr
   const showRetryButton = status === 'error' && onRetry;
 
   return (
-    <div className="glass-card rounded-lg p-4 animate-fade-in">
+    <div 
+      className="glass-card rounded-lg p-4 animate-fade-in"
+      role="status"
+      aria-live="polite"
+      aria-label={`Connection status: ${getStatusText()}`}
+    >
       <div className="flex items-center justify-between flex-wrap gap-3">
         {/* Status indicator */}
         <div className="flex items-center gap-3">
-          <div className="relative">
+          <div className="relative" aria-hidden="true">
             <div className={`w-3 h-3 rounded-full ${getStatusColor()} ${status === 'connected' ? 'animate-pulse-glow' : ''}`} />
             {status === 'connecting' && (
               <div className="absolute inset-0 w-3 h-3 rounded-full bg-warning animate-ping opacity-75" />
@@ -57,7 +62,7 @@ export function ConnectionStatus({ connectionInfo, onRetry }: ConnectionStatusPr
           <div>
             <span className="text-sm font-medium text-text">{getStatusText()}</span>
             {error && status !== 'connected' && (
-              <p className="text-xs text-error mt-0.5">{error}</p>
+              <p className="text-xs text-error mt-0.5" role="alert">{error}</p>
             )}
           </div>
         </div>
