@@ -1,4 +1,4 @@
-import kabawLogo from '../assets/logo.png';
+import kabawLogo from '../assets/logo.jpeg';
 
 interface ChatHeaderProps {
   isConnected: boolean;

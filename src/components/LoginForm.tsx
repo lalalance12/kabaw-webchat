@@ -1,5 +1,5 @@
 import type { FormEvent } from 'react';
-import kabawLogo from '../assets/logo.png';
+import kabawLogo from '../assets/logo.jpeg';
 
 interface LoginFormProps {
   username: string;
