@@ -3,6 +3,7 @@ import { useWebSocket } from '../hooks/useWebSocket';
 import { ConnectionStatus } from './ConnectionStatus';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
+import kabawLogo from '../assets/logo.jpeg';
 
 export function ChatContainer() {
   const { connectionInfo, messages, connect, disconnect, sendMessage, clearMessages } = useWebSocket();
@@ -33,11 +34,11 @@ export function ChatContainer() {
           <div className="glass-card rounded-lg p-8 border border-surface-lighter">
             {/* Logo & Title */}
             <div className="text-center mb-8">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-lg bg-gradient-to-br from-accent-dark to-accent flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-9 h-9 text-white">
-                  <path fillRule="evenodd" d="M4.804 21.644A6.707 6.707 0 006 21.75a6.721 6.721 0 003.583-1.029c.774.182 1.584.279 2.417.279 5.322 0 9.75-3.97 9.75-9 0-5.03-4.428-9-9.75-9s-9.75 3.97-9.75 9c0 2.409 1.025 4.587 2.674 6.192.232.226.277.428.254.543a3.73 3.73 0 01-.814 1.686.75.75 0 00.44 1.223zM8.25 10.875a1.125 1.125 0 100 2.25 1.125 1.125 0 000-2.25zM10.875 12a1.125 1.125 0 112.25 0 1.125 1.125 0 01-2.25 0zm4.875-1.125a1.125 1.125 0 100 2.25 1.125 1.125 0 000-2.25z" clipRule="evenodd" />
-                </svg>
-              </div>
+              <img 
+                src={kabawLogo} 
+                alt="Kabaw Logo" 
+                className="w-20 h-20 mx-auto mb-4 rounded-lg object-contain"
+              />
               <h1 className="text-2xl font-bold text-text">Kabaw WebChat</h1>
               <p className="text-sm text-text-muted mt-1">Real-time WebSocket messaging</p>
             </div>
@@ -100,11 +101,11 @@ export function ChatContainer() {
       {/* Header */}
       <header className="glass-card rounded-lg p-4 flex items-center justify-between animate-fade-in">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-accent-dark to-accent flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-white">
-              <path fillRule="evenodd" d="M4.804 21.644A6.707 6.707 0 006 21.75a6.721 6.721 0 003.583-1.029c.774.182 1.584.279 2.417.279 5.322 0 9.75-3.97 9.75-9 0-5.03-4.428-9-9.75-9s-9.75 3.97-9.75 9c0 2.409 1.025 4.587 2.674 6.192.232.226.277.428.254.543a3.73 3.73 0 01-.814 1.686.75.75 0 00.44 1.223zM8.25 10.875a1.125 1.125 0 100 2.25 1.125 1.125 0 000-2.25zM10.875 12a1.125 1.125 0 112.25 0 1.125 1.125 0 01-2.25 0zm4.875-1.125a1.125 1.125 0 100 2.25 1.125 1.125 0 000-2.25z" clipRule="evenodd" />
-            </svg>
-          </div>
+          <img 
+            src={kabawLogo} 
+            alt="Kabaw Logo" 
+            className="w-10 h-10 rounded-lg object-contain"
+          />
           <div>
             <h1 className="text-xl font-bold text-text">Kabaw WebChat</h1>
             <p className="text-xs text-text-muted">Real-time WebSocket messaging</p>
