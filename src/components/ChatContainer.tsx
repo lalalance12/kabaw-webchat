@@ -1,8 +1,15 @@
-import { useState, type FormEvent, useEffect } from 'react';
+import { useState, type FormEvent, useEffect, useCallback } from 'react';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { ConnectionStatus } from './ConnectionStatus';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
+import { 
+  validateUsername, 
+  validateChannel, 
+  sanitizeUsername, 
+  sanitizeChannel 
+} from '../utils/validation';
+import { UI_CONFIG } from '../config/constants';
 import kabawLogo from '../assets/logo.jpeg';
 
 /**
@@ -23,11 +30,48 @@ export function ChatContainer() {
   const [username, setUsername] = useState('');
   const [channel, setChannel] = useState('general');
   const [isLoading, setIsLoading] = useState(false);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [channelError, setChannelError] = useState<string | null>(null);
 
   const isConnected = connectionInfo.status === 'connected';
   const isConnecting = connectionInfo.status === 'connecting';
   const isError = connectionInfo.status === 'error';
   const showLoginScreen = !isConnected && !isConnecting && !isError;
+
+  // Validate inputs on change
+  const handleUsernameChange = (value: string) => {
+    setUsername(value);
+    const validation = validateUsername(value);
+    setUsernameError(validation.error || null);
+  };
+
+  const handleChannelChange = (value: string) => {
+    setChannel(value);
+    const validation = validateChannel(value);
+    setChannelError(validation.error || null);
+  };
+
+  const handleConnect = useCallback((e: FormEvent) => {
+    e.preventDefault();
+    
+    // Validate before connecting
+    const usernameValidation = validateUsername(username);
+    const channelValidation = validateChannel(channel);
+    
+    if (!usernameValidation.isValid || !channelValidation.isValid) {
+      setUsernameError(usernameValidation.error || null);
+      setChannelError(channelValidation.error || null);
+      return;
+    }
+    
+    setIsLoading(true);
+    const sanitizedUsername = sanitizeUsername(username) || 'Anonymous';
+    const sanitizedChannel = sanitizeChannel(channel) || 'general';
+    connect(sanitizedUsername, sanitizedChannel);
+    
+    // Reset loading after a brief delay
+    setTimeout(() => setIsLoading(false), UI_CONFIG.LOADING_RESET_DELAY);
+  }, [username, channel, connect]);
 
   // Handle keyboard shortcut for quick connect (Ctrl/Cmd + Enter on login)
   useEffect(() => {
@@ -39,18 +83,7 @@ export function ChatContainer() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showLoginScreen, username, channel]);
-
-  const handleConnect = (e: FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    const trimmedUsername = username.trim() || 'Anonymous';
-    const trimmedChannel = channel.trim() || 'general';
-    connect(trimmedUsername, trimmedChannel);
-    
-    // Reset loading after a brief delay
-    setTimeout(() => setIsLoading(false), 500);
-  };
+  }, [showLoginScreen, handleConnect]);
 
   const handleDisconnect = () => {
     disconnect();
@@ -88,14 +121,17 @@ export function ChatContainer() {
                   type="text"
                   id="username"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => handleUsernameChange(e.target.value)}
                   placeholder="Anonymous"
                   autoComplete="username"
                   autoFocus
-                  className="w-full bg-surface rounded-lg px-4 py-3 text-text placeholder-text-dim
-                           border border-surface-lighter focus:border-accent
-                           focus:outline-none focus:ring-1 focus:ring-accent/30 transition-all duration-200"
+                  className={`w-full bg-surface rounded-lg px-4 py-3 text-text placeholder-text-dim
+                           border ${usernameError ? 'border-error' : 'border-surface-lighter'} focus:border-accent
+                           focus:outline-none focus:ring-1 focus:ring-accent/30 transition-all duration-200`}
                 />
+                {usernameError && (
+                  <p className="text-xs text-error mt-1">{usernameError}</p>
+                )}
               </div>
 
               <div>
@@ -108,13 +144,16 @@ export function ChatContainer() {
                     type="text"
                     id="channel"
                     value={channel}
-                    onChange={(e) => setChannel(e.target.value)}
+                    onChange={(e) => handleChannelChange(e.target.value)}
                     placeholder="general"
-                    className="w-full bg-surface rounded-lg pl-8 pr-4 py-3 text-text placeholder-text-dim
-                             border border-surface-lighter focus:border-accent
-                             focus:outline-none focus:ring-1 focus:ring-accent/30 transition-all duration-200"
+                    className={`w-full bg-surface rounded-lg pl-8 pr-4 py-3 text-text placeholder-text-dim
+                             border ${channelError ? 'border-error' : 'border-surface-lighter'} focus:border-accent
+                             focus:outline-none focus:ring-1 focus:ring-accent/30 transition-all duration-200`}
                   />
                 </div>
+                {channelError && (
+                  <p className="text-xs text-error mt-1">{channelError}</p>
+                )}
               </div>
 
               <button
