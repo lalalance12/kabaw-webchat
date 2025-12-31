@@ -19,5 +19,9 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // Disable immutability rule - we intentionally use recursive callbacks for WebSocket reconnection
+      'react-hooks/immutability': 'off',
+    },
   },
 ])
