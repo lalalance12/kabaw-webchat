@@ -1,11 +1,10 @@
 import { useState, useRef, useEffect, type FormEvent, type KeyboardEvent } from 'react';
+import { MESSAGE_CONFIG, UI_CONFIG } from '../config/constants';
 
 interface MessageInputProps {
   onSend: (content: string) => boolean;
   disabled: boolean;
 }
-
-const MAX_MESSAGE_LENGTH = 1000;
 
 /**
  * Message input component with auto-resize textarea and character counter.
@@ -39,7 +38,7 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
       }
     }
     
-    setTimeout(() => setIsSending(false), 100);
+    setTimeout(() => setIsSending(false), UI_CONFIG.SENDING_RESET_DELAY);
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -51,7 +50,7 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
-    if (value.length <= MAX_MESSAGE_LENGTH) {
+    if (value.length <= MESSAGE_CONFIG.MAX_LENGTH) {
       setMessage(value);
     }
   };
@@ -63,8 +62,8 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
   };
 
   const charCount = message.length;
-  const isNearLimit = charCount > MAX_MESSAGE_LENGTH * 0.9;
-  const isAtLimit = charCount >= MAX_MESSAGE_LENGTH;
+  const isNearLimit = charCount > MESSAGE_CONFIG.MAX_LENGTH * 0.9;
+  const isAtLimit = charCount >= MESSAGE_CONFIG.MAX_LENGTH;
 
   return (
     <form onSubmit={handleSubmit} className="glass-card rounded-lg p-4">
@@ -91,7 +90,7 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
             <div className={`absolute bottom-1 right-2 text-xs transition-colors ${
               isAtLimit ? 'text-error' : isNearLimit ? 'text-warning' : 'text-text-dim'
             }`}>
-              {charCount}/{MAX_MESSAGE_LENGTH}
+              {charCount}/{MESSAGE_CONFIG.MAX_LENGTH}
             </div>
           )}
         </div>

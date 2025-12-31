@@ -1,11 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { ChatMessage, OutgoingMessage, ConnectionInfo, ConnectionStatus } from '../types';
-
-// Configuration constants - easily configurable
-const WS_BASE_URL = 'ws://localhost:8080/ws';
-const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000]; // Exponential backoff
-const MAX_RECONNECT_ATTEMPTS = 5;
-const CONNECTION_TIMEOUT = 10000; // 10 seconds
+import { WS_CONFIG } from '../config/constants';
 
 /**
  * Custom hook for WebSocket connection management
@@ -30,7 +25,7 @@ export function useWebSocket(): UseWebSocketReturn {
         userId: null,
         error: null,
         reconnectAttempt: 0,
-        maxReconnectAttempts: MAX_RECONNECT_ATTEMPTS,
+        maxReconnectAttempts: WS_CONFIG.MAX_RECONNECT_ATTEMPTS,
     });
     const [messages, setMessages] = useState<ChatMessage[]>([]);
 
@@ -73,8 +68,8 @@ export function useWebSocket(): UseWebSocketReturn {
      * Get reconnection delay with exponential backoff
      */
     const getReconnectDelay = useCallback((attempt: number): number => {
-        const index = Math.min(attempt, RECONNECT_DELAYS.length - 1);
-        return RECONNECT_DELAYS[index];
+        const index = Math.min(attempt, WS_CONFIG.RECONNECT_DELAYS.length - 1);
+        return WS_CONFIG.RECONNECT_DELAYS[index];
     }, []);
 
     /**
@@ -103,7 +98,7 @@ export function useWebSocket(): UseWebSocketReturn {
             wsRef.current = null;
         }
 
-        const wsUrl = `${WS_BASE_URL}?username=${encodeURIComponent(username)}&channel=${encodeURIComponent(channel)}`;
+        const wsUrl = `${WS_CONFIG.BASE_URL}?username=${encodeURIComponent(username)}&channel=${encodeURIComponent(channel)}`;
         console.log('[FRONTEND-CONNECT] Attempting to connect to:', wsUrl);
 
         updateStatus('connecting');
@@ -120,7 +115,7 @@ export function useWebSocket(): UseWebSocketReturn {
                     ws.close();
                     updateStatus('error', 'Connection timeout - server may be unavailable');
                 }
-            }, CONNECTION_TIMEOUT);
+            }, WS_CONFIG.CONNECTION_TIMEOUT);
 
             ws.onopen = () => {
                 clearTimeout(connectionTimeoutRef.current!);
@@ -173,12 +168,12 @@ export function useWebSocket(): UseWebSocketReturn {
                 }
 
                 // Attempt reconnection if supposed to stay connected
-                if (shouldReconnectRef.current && reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
+                if (shouldReconnectRef.current && reconnectAttemptsRef.current < WS_CONFIG.MAX_RECONNECT_ATTEMPTS) {
                     const delay = getReconnectDelay(reconnectAttemptsRef.current);
                     reconnectAttemptsRef.current++;
 
-                    console.log(`[FRONTEND-RECONNECT] Attempting reconnect ${reconnectAttemptsRef.current}/${MAX_RECONNECT_ATTEMPTS} in ${delay}ms`);
-                    updateStatus('connecting', `Reconnecting in ${delay / 1000}s... (${reconnectAttemptsRef.current}/${MAX_RECONNECT_ATTEMPTS})`);
+                    console.log(`[FRONTEND-RECONNECT] Attempting reconnect ${reconnectAttemptsRef.current}/${WS_CONFIG.MAX_RECONNECT_ATTEMPTS} in ${delay}ms`);
+                    updateStatus('connecting', `Reconnecting in ${delay / 1000}s... (${reconnectAttemptsRef.current}/${WS_CONFIG.MAX_RECONNECT_ATTEMPTS})`);
 
                     reconnectTimeoutRef.current = setTimeout(() => {
                         connectInternal(connectionParamsRef.current.username, connectionParamsRef.current.channel);
