@@ -4,10 +4,12 @@ A modern React single-page application for real-time WebSocket messaging, built 
 
 ## 🚀 Features
 
-- **Real-time WebSocket Communication**: Connect to `ws://localhost:8080/ws` for live messaging
-- **Auto-reconnection**: Automatically attempts to reconnect on disconnect (up to 5 attempts)
+- **Real-time WebSocket Communication**: Connect to configurable WebSocket server for live messaging
+- **Auto-reconnection**: Automatically attempts to reconnect on disconnect (up to 5 attempts with exponential backoff)
 - **Modern UI**: Glassmorphism design with smooth animations
 - **Responsive Design**: Works on desktop and mobile devices
+- **Input Validation**: Username and channel sanitization with error feedback
+- **Error Boundary**: Graceful error handling with recovery options
 - **Console Logging**: Full logging of WebSocket events in browser console
 
 ## 📋 Prerequisites
@@ -26,11 +28,25 @@ cd kabaw-webchat
 # Install dependencies
 npm install
 
+# (Optional) Create environment file for custom WebSocket URL
+cp .env.example .env
+
 # Start the development server
 npm run dev
 ```
 
 The app will be available at `http://localhost:5173/`
+
+## ⚙️ Configuration
+
+The WebSocket URL can be configured via environment variable:
+
+```bash
+# .env file
+VITE_WS_URL=ws://localhost:8080/ws
+```
+
+For production deployments, set this to your production WebSocket server URL (use `wss://` for secure connections).
 
 ## 🔌 Connecting to the WebSocket Server
 
@@ -48,7 +64,7 @@ The app will be available at `http://localhost:5173/`
 
 4. **Enter your username** and channel (defaults to "general")
 
-5. **Click "Connect to WebSocket"** to start chatting!
+5. **Click "Connect"** to start chatting!
 
 ## 🏗️ Project Structure
 
@@ -58,19 +74,24 @@ kabaw-webchat/
 │   ├── components/
 │   │   ├── ChatContainer.tsx    # Main chat orchestration
 │   │   ├── ConnectionStatus.tsx # WebSocket status indicator
+│   │   ├── ErrorBoundary.tsx    # React error boundary
 │   │   ├── MessageInput.tsx     # Message input form
 │   │   ├── MessageList.tsx      # Chat message display
 │   │   └── index.ts             # Barrel exports
+│   ├── config/
+│   │   └── constants.ts         # Centralized configuration
 │   ├── hooks/
 │   │   └── useWebSocket.ts      # Custom WebSocket hook
 │   ├── types/
 │   │   └── index.ts             # TypeScript interfaces
+│   ├── utils/
+│   │   └── validation.ts        # Input validation utilities
 │   ├── App.tsx                  # Root component
 │   ├── main.tsx                 # Entry point
-│   └── index.css                # Tailwind + custom styles
+│   └── index.css                # Tailwind CSS + custom styles
+├── .env.example                 # Environment variables template
 ├── index.html
 ├── package.json
-├── tailwind.config.js
 └── vite.config.ts
 ```
 
@@ -97,10 +118,10 @@ The app logs all WebSocket activity to the browser console:
 
 ## 🧪 Technologies Used
 
-- **React 18** - UI framework
+- **React 19** - UI framework
 - **TypeScript** - Type safety
 - **Vite** - Build tool and dev server
-- **Tailwind CSS v4** - Styling with @theme tokens
+- **Tailwind CSS v4** - Styling with @theme tokens (CSS-based configuration)
 - **Native WebSocket API** - Real-time communication
 
 ## 📝 License
