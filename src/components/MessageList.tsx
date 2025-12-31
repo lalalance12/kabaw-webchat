@@ -77,7 +77,6 @@ function getUserColor(username: string): string {
  */
 export function MessageList({ messages, currentUserId }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -139,7 +138,12 @@ export function MessageList({ messages, currentUserId }: MessageListProps) {
   }
 
   return (
-    <div ref={containerRef} className="flex-1 overflow-y-auto p-4 space-y-1">
+    <div 
+      className="flex-1 overflow-y-auto p-4 space-y-1"
+      role="log"
+      aria-label="Chat messages"
+      aria-live="polite"
+    >
       {groupedMessages.map(({ message, isFirstInGroup, isLastInGroup }, index) => {
         const isOwn = isOwnMessage(message);
         const isSystem = message.type === 'system' || message.type === 'user_connected';
