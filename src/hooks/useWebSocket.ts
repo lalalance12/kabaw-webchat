@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { ChatMessage, OutgoingMessage, ConnectionInfo, ConnectionStatus } from '../types';
 import { WS_CONFIG } from '../config/constants';
+import { wsLogger } from '../utils/logger';
 
 /**
  * Custom hook for WebSocket connection management
@@ -82,7 +83,7 @@ export function useWebSocket(): UseWebSocketReturn {
                 if (content) {
                     const message: OutgoingMessage = { type: 'message', content };
                     wsRef.current.send(JSON.stringify(message));
-                    console.log('[FRONTEND-SEND-QUEUED]', content);
+                    wsLogger.log('Sent queued message:', content);
                 }
             }
         }
@@ -99,7 +100,7 @@ export function useWebSocket(): UseWebSocketReturn {
         }
 
         const wsUrl = `${WS_CONFIG.BASE_URL}?username=${encodeURIComponent(username)}&channel=${encodeURIComponent(channel)}`;
-        console.log('[FRONTEND-CONNECT] Attempting to connect to:', wsUrl);
+        wsLogger.log('Attempting to connect to:', wsUrl);
 
         updateStatus('connecting');
         setConnectionInfo(prev => ({ ...prev, username, channel, userId: null }));
@@ -111,7 +112,7 @@ export function useWebSocket(): UseWebSocketReturn {
             // Set connection timeout
             connectionTimeoutRef.current = setTimeout(() => {
                 if (ws.readyState !== WebSocket.OPEN) {
-                    console.error('[FRONTEND-ERROR] Connection timeout');
+                    wsLogger.error('Connection timeout');
                     ws.close();
                     updateStatus('error', 'Connection timeout - server may be unavailable');
                 }
@@ -119,7 +120,7 @@ export function useWebSocket(): UseWebSocketReturn {
 
             ws.onopen = () => {
                 clearTimeout(connectionTimeoutRef.current!);
-                console.log(`[FRONTEND-CONNECT] Connected to WebSocket as ${username} in channel ${channel}`);
+                wsLogger.log(`Connected to WebSocket as ${username} in channel ${channel}`);
                 updateStatus('connected');
                 reconnectAttemptsRef.current = 0;
 
@@ -130,29 +131,29 @@ export function useWebSocket(): UseWebSocketReturn {
             ws.onmessage = (event) => {
                 try {
                     const message: ChatMessage = JSON.parse(event.data);
-                    console.log('[FRONTEND-MESSAGE]', JSON.stringify(message, null, 2));
+                    wsLogger.log('Received message:', message);
 
                     // Handle user_connected message to get assigned user ID
                     if (message.type === 'user_connected' && message.user_id) {
-                        console.log('[FRONTEND-USER-ID] Assigned user ID:', message.user_id);
+                        wsLogger.log('Assigned user ID:', message.user_id);
                         setConnectionInfo(prev => ({ ...prev, userId: message.user_id! }));
                     }
 
                     setMessages(prev => [...prev, message]);
                 } catch (err) {
-                    console.error('[FRONTEND-ERROR] Failed to parse message:', err);
+                    wsLogger.error('Failed to parse message:', err);
                 }
             };
 
             ws.onerror = (error) => {
-                console.error('[FRONTEND-ERROR] WebSocket error:', error);
+                wsLogger.error('WebSocket error:', error);
                 // Don't update status here - onclose will handle it
             };
 
             ws.onclose = (event) => {
                 clearTimeout(connectionTimeoutRef.current!);
-                console.log(`[FRONTEND-DISCONNECT] Connection closed. Code: ${event.code}, Reason: ${event.reason}`);
-                console.log('[FRONTEND-USER-ID] User ID cleared');
+                wsLogger.log(`Connection closed. Code: ${event.code}, Reason: ${event.reason}`);
+                wsLogger.log('User ID cleared');
 
                 setConnectionInfo(prev => ({ ...prev, userId: null }));
                 wsRef.current = null;
@@ -172,7 +173,7 @@ export function useWebSocket(): UseWebSocketReturn {
                     const delay = getReconnectDelay(reconnectAttemptsRef.current);
                     reconnectAttemptsRef.current++;
 
-                    console.log(`[FRONTEND-RECONNECT] Attempting reconnect ${reconnectAttemptsRef.current}/${WS_CONFIG.MAX_RECONNECT_ATTEMPTS} in ${delay}ms`);
+                    wsLogger.log(`Attempting reconnect ${reconnectAttemptsRef.current}/${WS_CONFIG.MAX_RECONNECT_ATTEMPTS} in ${delay}ms`);
                     updateStatus('connecting', `Reconnecting in ${delay / 1000}s... (${reconnectAttemptsRef.current}/${WS_CONFIG.MAX_RECONNECT_ATTEMPTS})`);
 
                     reconnectTimeoutRef.current = setTimeout(() => {
@@ -185,7 +186,7 @@ export function useWebSocket(): UseWebSocketReturn {
                 }
             };
         } catch (err) {
-            console.error('[FRONTEND-ERROR] Failed to create WebSocket:', err);
+            wsLogger.error('Failed to create WebSocket:', err);
             updateStatus('error', 'Failed to initialize connection');
         }
     }, [updateStatus, getReconnectDelay, flushMessageQueue]);
@@ -206,7 +207,7 @@ export function useWebSocket(): UseWebSocketReturn {
      * Public disconnect method
      */
     const disconnect = useCallback(() => {
-        console.log('[FRONTEND-DISCONNECT] User initiated disconnect');
+        wsLogger.log('User initiated disconnect');
         clearTimeouts();
         shouldReconnectRef.current = false;
         reconnectAttemptsRef.current = 0;
@@ -225,7 +226,7 @@ export function useWebSocket(): UseWebSocketReturn {
      */
     const retryConnection = useCallback(() => {
         if (connectionInfo.status === 'error' || connectionInfo.status === 'disconnected') {
-            console.log('[FRONTEND-RETRY] User initiated retry');
+            wsLogger.log('User initiated retry');
             reconnectAttemptsRef.current = 0;
             shouldReconnectRef.current = true;
             connectInternal(
@@ -241,7 +242,7 @@ export function useWebSocket(): UseWebSocketReturn {
      */
     const sendMessage = useCallback((content: string): boolean => {
         if (!content.trim()) {
-            console.warn('[FRONTEND-WARN] Cannot send empty message');
+            wsLogger.warn('Cannot send empty message');
             return false;
         }
 
@@ -251,7 +252,7 @@ export function useWebSocket(): UseWebSocketReturn {
                 type: 'message',
                 content: content.trim(),
             };
-            console.log('[FRONTEND-SEND]', JSON.stringify(message, null, 2));
+            wsLogger.log('Sent message:', message);
             wsRef.current.send(JSON.stringify(message));
             return true;
         }
@@ -259,11 +260,11 @@ export function useWebSocket(): UseWebSocketReturn {
         // If reconnecting, queue the message
         if (connectionInfo.status === 'connecting' && shouldReconnectRef.current) {
             messageQueueRef.current.push(content.trim());
-            console.log('[FRONTEND-QUEUE] Message queued for sending after reconnect');
+            wsLogger.log('Message queued for sending after reconnect');
             return true;
         }
 
-        console.error('[FRONTEND-ERROR] Cannot send message: WebSocket not connected');
+        wsLogger.error('Cannot send message: WebSocket not connected');
         return false;
     }, [connectionInfo.status]);
 
