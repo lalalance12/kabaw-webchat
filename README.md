@@ -2,10 +2,6 @@
 
 A modern React single-page application for real-time WebSocket messaging, built for the Kabaw Chat technical evaluation.
 
-![Connection Form](initial_connection_form_1767147497761.png)
-
-![After Connection Attempt](after_connection_attempt_1767147530480.png)
-
 ## 🚀 Features
 
 - **Real-time WebSocket Communication**: Connect to `ws://localhost:8080/ws` for live messaging
